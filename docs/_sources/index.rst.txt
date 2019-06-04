@@ -17,3 +17,7 @@ Only one class can be found : Matrix, which calculates matrix and can print step
 
 
 * :ref:`genindex`
+
+* Github_
+
+.. _Github: https://github.com/dhnam/matrix-with-step-by-step
