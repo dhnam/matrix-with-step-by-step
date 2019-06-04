@@ -1,7 +1,0 @@
-Matrix
-======
-
-.. autoclass:: matrix.matrix.Matrix
-    :members:
-    :special-members: __matmul__, __mul__, __invert__
-
