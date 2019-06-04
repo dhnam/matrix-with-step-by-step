@@ -1,0 +1,19 @@
+.. Matrix documentation master file, created by
+   sphinx-quickstart on Sun Jun  2 14:57:25 2019.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome!
+========
+Welcome to Matrix's document! This is my first documentation made with Sphinx.
+
+Only one class can be found : Matrix, which calculates matrix and can print step-by-step solution.
+
+
+.. toctree::
+   :maxdepth: 2
+
+   matrix
+
+
+* :ref:`genindex`
