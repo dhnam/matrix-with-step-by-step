@@ -1,3 +1,9 @@
+"""
+    Matrix
+    ------
+
+    Self made matrix mudule with step-by-step solution!
+"""
 from fractions import Fraction
 from typing import Optional, Tuple, Union
 
@@ -27,7 +33,7 @@ class Matrix(list):
 
     def __str__(self):
         """
-        __str__ method for str().
+        __str__ method for `str()`.
         """
         def recursive_str(mat, depth=1):
             to_return = ""
@@ -89,7 +95,7 @@ class Matrix(list):
 
     def __matmul__(self, other):
         """
-        __matmul__ method for @.
+        __matmul__ method for `@`.
         Based on PEP 465.
 
         Raises
@@ -149,14 +155,14 @@ class Matrix(list):
 
     def __imatmul__(self, other):
         """
-        __imatmul__ method for @=.
+        __imatmul__ method for `@=`.
         """
         self = self @ other
         return self
 
     def __mul__(self, other):
         """
-        __mul__ method for *.
+        __mul__ method for `*`.
         If multiply matrix with matrix, it is element-wize,
         not matrix multiply.
         """
@@ -184,14 +190,14 @@ class Matrix(list):
 
     def __imul__(self, other):
         """
-        __imul__ method for *=.
+        __imul__ method for `*=`.
         """
         self = self * other
         return self
 
     def __invert__(self):
         """
-        __invert__ method for ~.
+        __invert__ method for `~`.
         Return inverse matrix.
 
         Raises
@@ -217,8 +223,8 @@ class Matrix(list):
         Parameters
         ----------
         second
-            Right-side matrix. can be 1D or 2D. If not given,
-            this method calculates inverse matrix.
+            Right-side matrix. can be 1D or 2D.
+            If not given, this method calculates inverse matrix.
         step_by_step
             If true, print step by step solution.
 
@@ -234,6 +240,34 @@ class Matrix(list):
         -------
         Matrix
             Result of gauss elimination calculation.
+
+        Examples
+        --------
+        Example of using gauss_elem with no option:
+
+        >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]])
+        >>> print(a.gauss_elem())
+        [[-40 16  9]
+         [ 13 -5 -3]
+         [  5 -2 -1]]
+
+        Example of using gauss_elem with option:
+
+        >>> b = Matrix([[1,0,0],[0,1,0],[0,1,1]])
+        >>> print(a.gauss_elem(b))
+        [[-40 16  9]
+         [ 13 -5 -3]
+         [  5 -2 -1]]
+
+        Example of using step by step solution:
+
+        >>> a.gauss_elem(step_by_step=True)
+        1 2 3 | 1 0 0
+        2 5 3 | 0 1 0
+        1 0 8 | 0 0 1
+        Add row 1 * -2 to row 2
+            ...
+
         """
 
         def print_gauss():
@@ -249,12 +283,13 @@ class Matrix(list):
                 print(str_list[i], "|", str2_list[i])
 
         def change_row(src, dest):
-            if step_by_step:
-                print("Change row", src + 1, "with row", dest + 1)
-            first[src], first[dest], second[src], second[dest] =\
-                first[dest], first[src], second[dest], second[src]
-            if step_by_step:
-                print_gauss()
+            if src != dest:
+                if step_by_step:
+                    print("Change row", src + 1, "with row", dest + 1)
+                first[src], first[dest], second[src], second[dest] =\
+                    first[dest], first[src], second[dest], second[src]
+                if step_by_step:
+                    print_gauss()
 
         def div_row(row, num):
             if step_by_step:
@@ -304,13 +339,17 @@ class Matrix(list):
         for i, next_row in enumerate(first):
             if next_row[i] != 1:
                 found = False
+                non_zero = i
                 for j in range(len(first) - i):
                     if first[j + i][i] == 1:
                         found = True
                         change_row(i, j + i)
-                        break
+                    elif next_row[i] == 0 and first[j + i][i] != 0\
+                         and non_zero == i:
+                        non_zero = j + i
                 if not found:
-                    div_row(i, next_row[i])
+                    change_row(i, non_zero)
+                    div_row(i, first[i][i])
 
             for j in range(len(first) - i - 1):
                 if first[j + i + 1][i] == 0:
@@ -324,8 +363,11 @@ class Matrix(list):
                     if first[j + i][i] == 1:
                         found = True
                         change_row(i, j + i)
-                        break
+                    elif first[i][i] == 0 and first[j + i][i] != 0\
+                         and non_zero == i:
+                        non_zero = j + i
                 if not found:
+                    change_row(i, non_zero)
                     div_row(i, first[i][i])
 
             for j in range(i - 1, -1, -1):
@@ -353,6 +395,27 @@ class Matrix(list):
         -------
         Matrix
             calculated inverse matrix
+
+        Examples
+        --------
+        Example of using inv_using_det:
+
+        >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]]
+        >>> print(a.inv_using_det())
+        [[-40 16  9]
+         [ 13 -5 -3]
+         [  5 -2 -1]]
+
+        Example of using step by step solution:
+
+        >>> a.inv_using_det(step_by_step=True)
+        Get adjugate matrix before transpose
+        [[ 40 -13 -5]
+         [-16   5  2]
+         [ -9   3  1]]
+        Transpose it
+            ...
+
         """
         if len(self) != len(self[0]):
             raise ValueError(
@@ -411,6 +474,26 @@ class Matrix(list):
         -------
         tuple
            Roots calculated. Type is Fraction.
+
+        Examples
+        --------
+        Example of using cramer:
+
+        >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]]
+        >>> print(a.crammer((5, 2, 1)))
+        (-159, 52, 20)
+
+        Example of using cramer with step by step solution:
+
+        >>> a.crammer((5, 2, 1), step_by_step=True)
+        Find Determinant of given matrix.
+        Determinant of
+        [[1 2 3]
+         [2 5 3]
+         [1 0 8]]
+        is 40 - 26 + -15 = -1
+        ...
+
         """
         if not len(self) == len(self[0]) == len(vals):
             raise ValueError(
@@ -468,7 +551,7 @@ class Matrix(list):
         del to_return[i_selected]
         for i, next_row in enumerate(to_return):
             to_return[i] = [next_elem for j, next_elem in enumerate(next_row)
-                        if j != j_selected]
+                            if j != j_selected]
         return Matrix(to_return)
 
     def mat_input(self) -> None:
@@ -543,7 +626,7 @@ class Matrix(list):
     def mul_stepbystep(cls, first: 'Matrix', second: 'Matrix') -> 'Matrix':
         """
         Multiply matrix with printing step by step solution.
-        Calculates `first` @ `second`.
+        Calculates `first @ second`.
 
         Parameters
         ----------
@@ -641,12 +724,11 @@ class Matrix(list):
     @property
     def shape(self) -> Tuple[int, ...]:
         """
-        tuple of int: Shape of the matrix.
+        Tuple of int: Shape of the matrix.
         """
         if not isinstance(self[0], list):
             return (len(self),)
         return (len(self), ) + Matrix(self[0]).shape
-
 
 
 if __name__ == "__main__":
