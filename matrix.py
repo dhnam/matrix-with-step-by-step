@@ -528,7 +528,6 @@ class Matrix(list):
                 raise ZeroDivisionError("Error : Attempt to divide " + a +
                                         " with 0.")
 
-        to_return = tuple(x / mat_det for x in vals)
         return to_return
 
     def get_cofactor(self, i_selected: int, j_selected: int) -> 'Matrix':
