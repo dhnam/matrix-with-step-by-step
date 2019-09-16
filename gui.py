@@ -7,7 +7,7 @@ def generate_table(num, row, col):
                        for i in range(1, row+1)]) for j in range(1, col+1)]
 
 def output_popup():
-    output_layout = [[sg.Output(size=(80,20))],
+    output_layout = [[sg.Output(size=(80,20), font='Consolas 10')],
                      [sg.Quit()]]
     output_window = sg.Window('Output', output_layout, finalize=True)
     return output_window
@@ -35,6 +35,9 @@ class EventHandler:
         self.layout = self.window.Rows[:]
 
     def process(self):
+        OFFSET = -2
+        processer = None
+
         if self.event in self.output_event_list and\
            not self.output_popup_activate:
             self.output_popup_activate = True
@@ -46,66 +49,60 @@ class EventHandler:
                 self.output_popup_activate = False
                 self.output_window.Close()
 
-        if 'ROW' in self.event or 'COL' in self.event:
-            self.change_table()
+        if self.event == "__TIMEOUT__":
+            return self.window
+
+        elif 'ROW' in self.event or 'COL' in self.event:
+            process_num = int(self.event[OFFSET])
+            processer = TableChangeEventProcesser(values=self.values,
+                                                  process_num=process_num,
+                                                  window=self.window)
+            self.window = processer.process()
+
+
         else:
-            if self.event != "__TIMEOUT__":
-                self.get_matrixes()
+            self.get_matrixes()
             if event == '_MUL_BTN_':
-                res = Matrix.mul_stepbystep(self.mat1, self.mat2)
-                print(res)
-            if event == '_GAUSS_BTN_':
-                try:
-                    self.mat1.gauss_elim(self.mat2, step_by_step=True)
-                except ValueError as e:
-                    print(str(e))
-                except ZeroDivisionError as e:
-                    print(str(e))
+                processer = MatmulEventProcesser(mat1=self.mat1,
+                                                 mat2=self.mat2)
+                
+            elif event == '_GAUSS_BTN_':
+                processer= GaussEventProcesser(mat1=self.mat1,
+                                               mat2=self.mat2)
+            else:
+                process_num = int(self.event[OFFSET])
+                
             if 'TRANS' in self.event:
-                calc_num = int(self.event[-2])
-                if calc_num == 1:
-                    print(self.mat1.T)
+                if process_num == 1:
+                    matrix = self.mat1
                 else:
-                    print(self.mat2.T)
+                    matrix = self.mat2
+                processer = TransposeEventProcesser(matrix=matrix)
+                
             if 'INV' in self.event:
-                calc_num = int(self.event[-2])
-                try:
-                    if calc_num == 1:
-                        res = self.mat1.inv_using_det(step_by_step=True)
-                    else:
-                        res = self.mat2.inv_using_det(step_by_step=True)
-                    print(res)
-                except ZeroDivisionError as e:
-                    print("=================")
-                    print(str(e))
-                    print("No inverse matrix")
-                except ValueError as e:
-                    print(str(e))
-                    print("No inverse matrix")
+                if process_num == 1:
+                    matrix = self.mat1
+                else:
+                    matrix = self.mat2
+                processer = InverseEventProcesser(matrix=matrix)
+                
             if 'DET' in self.event:
-                calc_num = int(self.event[-2])
-                try:
-                    if calc_num == 1:
-                        self.mat1.det_step_by_step()
-                    else:
-                        self.mat2.det_step_by_step()
-                except ValueError as e:
-                    print(str(e))
-                    print("No determinant")
+                if process_num == 1:
+                    matrix = self.mat1
+                else:
+                    matrix = self.mat2
+                processer = DeterminantEventProcesser(matrix=matrix)
             if 'CRAMER' in self.event:
-                calc_num = int(self.event[-2])
-                try:
-                    if calc_num == 1:
-                        res = self.mat1.cramer(tuple(self.mat2.T[0]),
-                                               step_by_step=True)
-                    else:
-                        res = self.mat2.cramer(tuple(self.mat1.T[0]),
-                                               step_by_step=True)
-                    print("===ROOTS===")
-                    print(tuple(str(next_root) for next_root in res))
-                except ZeroDivisionError as e:
-                    print(str(e))
-                    print("Cannot be solved.")
+                if process_num == 1:
+                    matrix = self.mat1
+                    target = tuple(self.mat2.T[0])
+                else:
+                    matrix = self.mat2
+                    target = tuple(self.mat1.T[0])
+                processer = CramerEventProcesser(matrix=matrix, target=target)
+
+            processer.process()
+
         return self.window
 
     def get_matrixes(self):
@@ -121,33 +118,134 @@ class EventHandler:
                         for i in range(1, max_col + 1)]
                        for j in range(1, max_row + 1)])
 
-    def change_table(self):
-        col1 = self.window['_LEFT_'].Rows[:]
-        col2 = self.window['_RIGHT_'].Rows[:]
-        col_btn = self.window['_BTNS_'].Rows[:]
-        update_num = int(self.event[-2])
-        row_val = int(self.values['_ROW' + str(update_num) + '_'])
-        col_val = int(self.values['_COL' + str(update_num) + '_'])
-        new_table = generate_table(update_num, row_val, col_val)
-        if update_num == 1:
-            col1[1] = new_table
-        else:
-            col2[1] = new_table
-        self.layout = [[sg.Column(col1, key='_LEFT_'),
-                        sg.Column(col_btn, key='_BTNS_'),
-                        sg.Column(col2, key='_RIGHT_')],
-                       [sg.Text("Cramer's formular uses "\
-                                "first column of the other matrix.")],
-                       [sg.Exit()]]
-        self.update_window()
 
-    def update_window(self):
-        cur = self.window.current_location()
-        window1 = sg.Window('Matrix with step by step solution', self.layout,
+
+class EventProcesser:
+    def __init__(self):
+        pass
+    def process(self):
+        pass
+
+class SingleMatrixEventProcesser(EventProcesser):
+    def __init__(self, matrix):
+        self._matrix = matrix
+    
+
+class TableChangeEventProcesser(EventProcesser):
+    def __init__(self, values, process_num, window):
+        self._values = values
+        self._process_num = process_num
+        self._window = window
+        self._layout = None
+        self._col1 = self._get_column_by_key('_LEFT_')
+        self._col2 = self._get_column_by_key('_RIGHT_')
+
+    def _get_column_by_key(self, key):
+        return self._window[key].Rows[:]
+
+    def process(self):
+        TABLE_INDEX = 1
+
+        row_val = int(self._values['_ROW' + str(self._process_num) + '_'])
+        col_val = int(self._values['_COL' + str(self._process_num) + '_'])
+        new_table = generate_table(self._process_num, row_val, col_val)
+        if self._process_num == 1:
+            self._col1[TABLE_INDEX] = new_table
+        else:
+            self._col2[TABLE_INDEX] = new_table
+        self._make_new_layout()
+        self._update_window()
+        return self._window
+
+    def _make_new_layout(self):
+        col_btn = self._get_column_by_key('_BTNS_')
+        self._layout = [[sg.Column(self._col1, key='_LEFT_'),
+                        sg.Column(col_btn, key='_BTNS_'),
+                        sg.Column(self._col2, key='_RIGHT_')],
+                        [sg.Text("Cramer's formular uses "\
+                                 "first column of the other matrix.")],
+                        [sg.Exit()]]
+    
+    def _update_window(self):
+        cur = self._window.current_location()
+        window1 = sg.Window('Matrix with step by step solution', self._layout,
                             location=cur, finalize=True)
-        window1.fill(values)
-        self.window.Close()
-        self.window = window1
+        window1.fill(self._values)
+        self._window.Close()
+        self._window = window1
+
+        
+class MatmulEventProcesser(EventProcesser):
+    def __init__(self, mat1, mat2):
+        self._mat1 = mat1
+        self._mat2 = mat2
+
+    def process(self):
+        res = Matrix.mul_stepbystep(self._mat1, self._mat2)
+        print(res)
+
+
+class GaussEventProcesser(EventProcesser):
+    def __init__(self, mat1, mat2):
+        self._mat1 = mat1
+        self._mat2 = mat2
+
+    def process(self):
+        try:
+             self._mat1.gauss_elim(self._mat2, step_by_step=True)
+        except (ValueError, ZeroDivisionError) as e:
+            print(str(e))
+
+
+class TransposeEventProcesser(SingleMatrixEventProcesser):
+    def __init__(self, matrix):
+        super().__init__(matrix)
+
+    def process(self):
+        print(self._matrix.T)
+
+
+class InverseEventProcesser(SingleMatrixEventProcesser):
+    def __init__(self, matrix):
+        super().__init__(matrix)
+
+    def process(self):
+        try:
+            self._matrix.inv_using_det(step_by_step=True)
+        except (ValueError, ZeroDivisionError) as e:
+            print("==================")
+            print(str(e))
+            print("No inverse matrix.")
+
+
+class DeterminantEventProcesser(SingleMatrixEventProcesser):
+    def __init__(self, matrix):
+        super().__init__(matrix)
+
+    def process(self):
+        try:
+            self._matrix.det_step_by_step()
+        except ValueError as e:
+            print("===============")
+            print(str(e))
+            print("No determinant.")
+
+
+class CramerEventProcesser(SingleMatrixEventProcesser):
+    def __init__(self, matrix, target):
+        super().__init__(matrix)
+        self._target = target
+
+    def process(self):
+        try:
+            res = self._matrix.cramer(self._target, step_by_step=True)
+            print("======ROOTS======")
+            print(tuple(str(next_root) for next_root in res))
+        except ZeroDivisionError as e:
+            print("=================")
+            print(str(e))
+            print("Cannot be solved.")
+
 
 col1 = [[sg.Spin(list(range(1, 11)), initial_value=3,\
                  key='_ROW1_', enable_events=True),
@@ -160,7 +258,7 @@ col1 = [[sg.Spin(list(range(1, 11)), initial_value=3,\
         [sg.Button("Inverse", key='_INV_BTN_1_'),
          sg.Button("Cramer's formular", key='_CRAMER_BTN_1_')]]
 col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_')],
-           [sg.Button("Gauss elimination:", key='_GAUSS_BTN_')]]
+           [sg.Button("Gauss elimination", key='_GAUSS_BTN_')]]
 col2 = [[sg.Spin(list(range(1, 11)), initial_value=3,\
                  key='_ROW2_', enable_events=True),
          sg.Text("X"),
@@ -190,6 +288,7 @@ while True:
     try:
         window = handler.process()
     except Exception as e:
+        print(type(e))
         print(str(e))
 
 
