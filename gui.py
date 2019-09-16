@@ -1,12 +1,13 @@
 import PySimpleGUI as sg
 from matrix import Matrix
+from abc import *
 
 def generate_table(num, row, col):
     return [sg.Column([[sg.Input(0, do_not_clear=True, size=(3,2),
                                  key=(num, i, j), justification='right')]
                        for i in range(1, row+1)]) for j in range(1, col+1)]
 
-class EventHandler:
+class EventHandler(metaclass=ABCMeta):
     def __init__(self, event=None, values=None):
         self._event = event
         self._values = values
@@ -15,6 +16,7 @@ class EventHandler:
         self._event = event
         self._values = values
 
+    @abstractmethod
     def handle_event(self):
         pass
 
@@ -160,9 +162,11 @@ class MatrixEventHandler(EventHandler):
         return matrix, target 
 
 
-class EventProcesser:
+class EventProcesser(metaclass=ABCMeta):
     def __init__(self):
         pass
+
+    @abstractmethod
     def process(self):
         pass
 
