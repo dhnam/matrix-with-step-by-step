@@ -389,7 +389,9 @@ class Matrix(list):
         Raises
         ------
         ZeroDivisionError
-            if there is no inverse matrix.
+            If there is no inverse matrix.
+        ValueError
+            If matrix is not square.
 
         Returns
         -------
@@ -469,6 +471,8 @@ class Matrix(list):
         ------
         ZeroDivisionError
             If polinomial linear expression cannot be solved.
+        ValueError
+            If matrix is not square.
 
         Returns
         -------
