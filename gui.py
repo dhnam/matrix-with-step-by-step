@@ -205,12 +205,14 @@ class TableChangeEventProcesser(EventProcesser):
 
     def _make_new_layout(self):
         col_btn = self._get_column_by_key('_BTNS_')
-        self._layout = [[sg.Column(self._col1, key='_LEFT_'),
+        self._layout = [[sg.Column(self._col1, key='_LEFT_',
+                                   element_justification='center'),
                         sg.Column(col_btn, key='_BTNS_'),
                         sg.Column(self._col2, key='_RIGHT_')],
-                        [sg.Text("Cramer's formular uses "\
+                        [sg.Text("Cramer's formular uses "
                                  "first column of the other matrix.")],
-                        [sg.Exit()]]
+                        [sg.Exit(size=(10,1),
+                                 button_color=("black", "#f77263"))]]
 
     def _update_window(self):
         cur = self._window.current_location()
@@ -304,29 +306,28 @@ col1 = [[sg.Spin(list(range(1, 11)), initial_value=3,
          sg.Spin(list(range(1, 11)), initial_value=3,
                  key='_COL1_', enable_events=True)],
         generate_table(1, 3, 3),
-        [sg.Button("Transpose", key='_TRANS_BTN_1_'),
-         sg.Button("Determinant", key='_DET_BTN_1_')],
-        [sg.Button("Inverse", key='_INV_BTN_1_'),
-         sg.Button("Cramer's formular", key='_CRAMER_BTN_1_')]]
-col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_')],
-           [sg.Button("Gauss elimination", key='_GAUSS_BTN_')]]
+        [sg.Button("Transpose", key='_TRANS_BTN_1_', size=(15, 1)),
+         sg.Button("Determinant", key='_DET_BTN_1_', size=(15, 1))],
+        [sg.Button("Inverse", key='_INV_BTN_1_', size=(15, 1)),
+         sg.Button("Cramer's formular", key='_CRAMER_BTN_1_', size=(15, 1))]]
+col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_', size=(15,4))],
+           [sg.Button("Gauss elimination", key='_GAUSS_BTN_', size=(15,4))]]
 col2 = [[sg.Spin(list(range(1, 11)), initial_value=3,
                  key='_ROW2_', enable_events=True),
          sg.Text("X"),
          sg.Spin(list(range(1, 11)), initial_value=3,
                  key='_COL2_', enable_events=True)],
         generate_table(2, 3, 3),
-        [sg.Button("Transpose", key='_TRANS_BTN_2_'),
-         sg.Button("Determinant", key='_DET_BTN_2_')],
-        [sg.Button("Inverse", key='_INV_BTN_2_'),
-         sg.Button("Cramer's formular", key='_CRAMER_BTN_2_')]]
+        [sg.Button("Transpose", key='_TRANS_BTN_2_', size=(15,1)),
+         sg.Button("Determinant", key='_DET_BTN_2_', size=(15,1))],
+        [sg.Button("Inverse", key='_INV_BTN_2_', size=(15,1)),
+         sg.Button("Cramer's formular", key='_CRAMER_BTN_2_', size=(15,1))]]
 
-layout = [[sg.Column(col1, key='_LEFT_'),
-           sg.Column(col_btn, key='_BTNS_'),
+layout = [[sg.Column(col1, key='_LEFT_', element_justification='center'),
+           sg.Column(col_btn, key='_BTNS_', element_justification='c'),
            sg.Column(col2, key='_RIGHT_')],
           [sg.Text("Cramer's formular uses first column of the other matrix.")],
-          [sg.Exit()]]
-
+          [sg.Exit(size=(10,1), button_color=("black", "#f77263"))]]
 
 window = sg.Window('Matrix with step by step solution', layout)
 
