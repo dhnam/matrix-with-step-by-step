@@ -4,8 +4,10 @@ from abc import *
 
 def generate_table(num, row, col):
     return [sg.Column([[sg.Input(0, do_not_clear=True, size=(3,2),
-                                 key=(num, i, j), justification='right')]
-                       for i in range(1, row+1)]) for j in range(1, col+1)]
+                                 pad=(0,3), key=(num, i, j),
+                                 justification='right')]
+                       for i in range(1, row+1)], pad=(0, 3))
+            for j in range(1, col+1)]
 
 class EventHandler(metaclass=ABCMeta):
     def __init__(self, event=None, values=None):
@@ -80,7 +82,7 @@ class PopUpHandler:
         self.output_window = sg.Window('Output', output_layout, finalize=True)
 
     def _handle_event(self):
-        out_event, _ = self.output_window.Read(timeout=100)
+        out_event, _ = self.output_window.read(timeout=100)
         if out_event is None or out_event == 'Quit':
             self.output_popup_activated = False
             self.output_window.Close()
@@ -225,8 +227,13 @@ class MatmulEventProcesser(EventProcesser):
         self._mat2 = mat2
 
     def process(self):
-        res = Matrix.mul_stepbystep(self._mat1, self._mat2)
-        print(res)
+        try:
+            res = Matrix.mul_stepbystep(self._mat1, self._mat2)
+            print(res)
+        except ValueError as e:
+            print("===================")
+            print(str(e))
+            print("Unable to multiply.")
 
 
 class GaussEventProcesser(EventProcesser):
@@ -291,10 +298,10 @@ class CramerEventProcesser(SingleMatrixEventProcesser):
             print("Cannot be solved.")
 
 
-col1 = [[sg.Spin(list(range(1, 11)), initial_value=3,\
+col1 = [[sg.Spin(list(range(1, 11)), initial_value=3,
                  key='_ROW1_', enable_events=True),
          sg.Text("X"),
-         sg.Spin(list(range(1, 11)), initial_value=3,\
+         sg.Spin(list(range(1, 11)), initial_value=3,
                  key='_COL1_', enable_events=True)],
         generate_table(1, 3, 3),
         [sg.Button("Transpose", key='_TRANS_BTN_1_'),
@@ -303,10 +310,10 @@ col1 = [[sg.Spin(list(range(1, 11)), initial_value=3,\
          sg.Button("Cramer's formular", key='_CRAMER_BTN_1_')]]
 col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_')],
            [sg.Button("Gauss elimination", key='_GAUSS_BTN_')]]
-col2 = [[sg.Spin(list(range(1, 11)), initial_value=3,\
+col2 = [[sg.Spin(list(range(1, 11)), initial_value=3,
                  key='_ROW2_', enable_events=True),
          sg.Text("X"),
-         sg.Spin(list(range(1, 11)), initial_value=3,\
+         sg.Spin(list(range(1, 11)), initial_value=3,
                  key='_COL2_', enable_events=True)],
         generate_table(2, 3, 3),
         [sg.Button("Transpose", key='_TRANS_BTN_2_'),
@@ -314,7 +321,8 @@ col2 = [[sg.Spin(list(range(1, 11)), initial_value=3,\
         [sg.Button("Inverse", key='_INV_BTN_2_'),
          sg.Button("Cramer's formular", key='_CRAMER_BTN_2_')]]
 
-layout = [[sg.Column(col1, key='_LEFT_'), sg.Column(col_btn, key='_BTNS_'),
+layout = [[sg.Column(col1, key='_LEFT_'),
+           sg.Column(col_btn, key='_BTNS_'),
            sg.Column(col2, key='_RIGHT_')],
           [sg.Text("Cramer's formular uses first column of the other matrix.")],
           [sg.Exit()]]
@@ -325,7 +333,7 @@ window = sg.Window('Matrix with step by step solution', layout)
 handler = ProgramEventHandler(window)
 
 while True:
-    event, values = window.Read(timeout=100)
+    event, values = window.read(timeout=100)
     handler.update_event_values(event, values)
     if event is None or event == 'Exit':
         break
@@ -335,4 +343,4 @@ while True:
         print(type(e))
         print(str(e))
 
-window.Close()
+window.close()
