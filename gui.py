@@ -1,21 +1,30 @@
+from abc import ABCMeta, abstractmethod
 import PySimpleGUI as sg
 from matrix import Matrix
-from abc import *
 
 
 def main():
-    col1 = make_column(1)
+    sg.change_look_and_feel('Reddit')
+    sg.set_options(border_width=0, font='Roboto 12',
+                   input_elements_background_color='#86a8ff',
+                   input_text_color='#000000',
+                   background_color='#e3f2fd',
+                   text_element_background_color='#e3f2fd',
+                   button_color=('#ffffff', '#5079d3'))
+    sg.set_options(scrollbar_color='#5ea7ff')
+
+    col1 = make_matrix_column(1)
     col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_', size=(15, 4))],
                [sg.Button("Gauss elimination", key='_GAUSS_BTN_',
                           size=(15, 4))]]
-    col2 = make_column(2)
+    col2 = make_matrix_column(2)
 
     layout = [[sg.Column(col1, key='_LEFT_', element_justification='c'),
                sg.Column(col_btn, key='_BTNS_', element_justification='c'),
                sg.Column(col2, key='_RIGHT_', element_justification='c')],
               [sg.Text("Cramer's formular uses "
                        "first column of the other matrix.")],
-              [sg.Exit(size=(10, 1), button_color=("black", "#f77263"))]]
+              [sg.Exit(size=(10, 1), button_color=("white", "#ff0266"))]]
 
     window = sg.Window('Matrix with step by step solution', layout)
 
@@ -26,18 +35,15 @@ def main():
         handler.update_event_values(event, values)
         if event is None or event == 'Exit':
             break
-        try:
-            window = handler.handle_event()
-        except Exception as e:
-            print(type(e))
-            print(str(e))
+
+        handler.handle_event()
+        window = handler.get_window()
 
     window.close()
 
 
-def make_column(col_num):
-    return [
-            [sg.Spin(list(range(1, 11)), initial_value=3,
+def make_matrix_column(col_num):
+    return [[sg.Spin(list(range(1, 11)), initial_value=3,
                      key='_ROW' + str(col_num) + '_', enable_events=True),
              sg.Text("X"),
              sg.Spin(list(range(1, 11)), initial_value=3,
@@ -54,13 +60,13 @@ def make_column(col_num):
                        size=(15, 1)),
              sg.Button("Cramer's formular",
                        key='_CRAMER_BTN_' + str(col_num) + '_',
-                       size=(15, 1))]
-           ]
+                       size=(15, 1))]]
 
 
 def generate_table(num, row, col):
-    return [sg.Column([[sg.Input(0, do_not_clear=True, size=(3, 2),
-                                 key=(num, i, j), justification='right')]
+    return [sg.Column([[sg.Input(0, do_not_clear=True, size=(5, 2),
+                                 key=(num, i, j), justification='right',
+                                 pad=(0, 5))]
                        for i in range(1, row+1)], pad=(0, 3),
                       element_justification='c')
             for j in range(1, col+1)]
@@ -91,7 +97,7 @@ class ProgramEventHandler(EventHandler):
         self.popup_handler.process_popup_given_event(self._event)
 
         if self._event == "__TIMEOUT__":
-            return self.window_event_handler.window
+            return
 
         if self.is_window_event():
             handler = self.window_event_handler
@@ -100,14 +106,15 @@ class ProgramEventHandler(EventHandler):
 
         self.handle_sub_event(handler)
 
-        return self.window_event_handler.window
-
     def is_window_event(self):
         return 'ROW' in self._event or 'COL' in self._event
 
     def handle_sub_event(self, handler):
         handler.update_event_values(self._event, self._values)
         handler.handle_event()
+
+    def get_window(self):
+        return self.window_event_handler.window
 
 
 class PopUpHandler:
@@ -253,10 +260,10 @@ class TableChangeEventProcesser(EventProcesser):
         col_btn = self._get_column_by_key('_BTNS_')
         self._layout = [[sg.Column(self._col1, key='_LEFT_',
                                    element_justification='c'),
-                        sg.Column(col_btn, key='_BTNS_',
-                                  element_justification='c'),
-                        sg.Column(self._col2, key='_RIGHT_',
-                                  element_justification='c')],
+                         sg.Column(col_btn, key='_BTNS_',
+                                   element_justification='c'),
+                         sg.Column(self._col2, key='_RIGHT_',
+                                   element_justification='c')],
                         [sg.Text("Cramer's formular uses "
                                  "first column of the other matrix.")],
                         [sg.Exit(size=(10, 1),
@@ -278,28 +285,22 @@ class DoubleMatrixEventProcesser(EventProcesser):
 
 
 class MatmulEventProcesser(DoubleMatrixEventProcesser):
-    def __init__(self, mat1, mat2):
-        super().__init__(mat1, mat2)
-
     def process(self):
         try:
             res = Matrix.mul_stepbystep(self._mat1, self._mat2)
             print(res)
-        except ValueError as e:
+        except ValueError as err:
             print("===================")
-            print(str(e))
+            print(str(err))
             print("Unable to multiply.")
 
 
 class GaussEventProcesser(DoubleMatrixEventProcesser):
-    def __init__(self, mat1, mat2):
-        super().__init__(mat1, mat2)
-
     def process(self):
         try:
             self._mat1.gauss_elim(self._mat2, step_by_step=True)
-        except (ValueError, ZeroDivisionError) as e:
-            print(str(e))
+        except (ValueError, ZeroDivisionError) as err:
+            print(str(err))
 
 
 class SingleMatrixEventProcesser(EventProcesser):
@@ -308,36 +309,27 @@ class SingleMatrixEventProcesser(EventProcesser):
 
 
 class TransposeEventProcesser(SingleMatrixEventProcesser):
-    def __init__(self, matrix):
-        super().__init__(matrix)
-
     def process(self):
         print(self._matrix.T)
 
 
 class InverseEventProcesser(SingleMatrixEventProcesser):
-    def __init__(self, matrix):
-        super().__init__(matrix)
-
     def process(self):
         try:
             self._matrix.inv_using_det(step_by_step=True)
-        except (ValueError, ZeroDivisionError) as e:
+        except (ValueError, ZeroDivisionError) as err:
             print("==================")
-            print(str(e))
+            print(str(err))
             print("No inverse matrix.")
 
 
 class DeterminantEventProcesser(SingleMatrixEventProcesser):
-    def __init__(self, matrix):
-        super().__init__(matrix)
-
     def process(self):
         try:
             self._matrix.det_step_by_step()
-        except ValueError as e:
+        except ValueError as err:
             print("===============")
-            print(str(e))
+            print(str(err))
             print("No determinant.")
 
 
@@ -351,9 +343,9 @@ class CramerEventProcesser(SingleMatrixEventProcesser):
             res = self._matrix.cramer(self._target, step_by_step=True)
             print("======ROOTS======")
             print(tuple(str(next_root) for next_root in res))
-        except (ZeroDivisionError, ValueError) as e:
+        except (ZeroDivisionError, ValueError) as err:
             print("=================")
-            print(str(e))
+            print(str(err))
             print("Cannot be solved.")
 
 
