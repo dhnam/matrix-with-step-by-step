@@ -29,7 +29,6 @@ def main():
         except Exception as e:
             print(type(e))
             print(str(e))
-            raise e
 
     window.close()
 
