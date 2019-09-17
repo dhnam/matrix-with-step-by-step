@@ -2,12 +2,64 @@ import PySimpleGUI as sg
 from matrix import Matrix
 from abc import *
 
+def main():
+    col1 = make_column(1)
+    col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_', size=(15, 4))],
+               [sg.Button("Gauss elimination", key='_GAUSS_BTN_',
+                          size=(15, 4))]]
+    col2 = make_column(2)
+
+    layout = [[sg.Column(col1, key='_LEFT_', element_justification='c'),
+               sg.Column(col_btn, key='_BTNS_', element_justification='c'),
+               sg.Column(col2, key='_RIGHT_', element_justification='c')],
+              [sg.Text("Cramer's formular uses first column of the other matrix.")],
+              [sg.Exit(size=(10,1), button_color=("black", "#f77263"))]]
+
+    window = sg.Window('Matrix with step by step solution', layout)
+
+    handler = ProgramEventHandler(window)
+
+    while True:
+        event, values = window.read(timeout=100)
+        handler.update_event_values(event, values)
+        if event is None or event == 'Exit':
+            break
+        try:
+            window = handler.handle_event()
+        except Exception as e:
+            print(type(e))
+            print(str(e))
+            raise e
+
+    window.close()
+
+def make_column(col_num):
+    return [
+            [sg.Spin(list(range(1, 11)), initial_value=3,
+                     key='_ROW'+ str(col_num) + '_', enable_events=True),
+             sg.Text("X"),
+             sg.Spin(list(range(1, 11)), initial_value=3,
+                     key='_COL'+ str(col_num) + '_', enable_events=True)],
+            
+            generate_table(col_num, 3, 3),
+            
+            [sg.Button("Transpose", key='_TRANS_BTN_'+ str(col_num) + '_',
+                       size=(15, 1)),
+             sg.Button("Determinant", key='_DET_BTN_'+ str(col_num) + '_',
+                       size=(15, 1))],
+            
+            [sg.Button("Inverse", key='_INV_BTN_'+ str(col_num) + '_',
+                       size=(15, 1)),
+             sg.Button("Cramer's formular",
+                       key='_CRAMER_BTN_'+ str(col_num) + '_',
+                       size=(15, 1))]
+           ]
+
 def generate_table(num, row, col):
     return [sg.Column([[sg.Input(0, do_not_clear=True, size=(3,2),
-                                 pad=(0,3), key=(num, i, j),
-                                 justification='right')]
-                       for i in range(1, row+1)], pad=(0, 3))
-            for j in range(1, col+1)]
+                                 key=(num, i, j), justification='right')]
+                       for i in range(1, row+1)], pad=(0, 3),
+                      element_justification='c') for j in range(1, col+1)]
 
 class EventHandler(metaclass=ABCMeta):
     def __init__(self, event=None, values=None):
@@ -114,11 +166,11 @@ class MatrixEventHandler(EventHandler):
         OFFSET = -2
 
         self.get_matrixes_from_values()
-        if event == '_MUL_BTN_':
+        if self._event == '_MUL_BTN_':
             processer = MatmulEventProcesser(mat1=self._mat1,
                                              mat2=self._mat2)
 
-        elif event == '_GAUSS_BTN_':
+        elif self._event == '_GAUSS_BTN_':
             processer = GaussEventProcesser(mat1=self._mat1,
                                             mat2=self._mat2)
         else:
@@ -206,9 +258,11 @@ class TableChangeEventProcesser(EventProcesser):
     def _make_new_layout(self):
         col_btn = self._get_column_by_key('_BTNS_')
         self._layout = [[sg.Column(self._col1, key='_LEFT_',
-                                   element_justification='center'),
-                        sg.Column(col_btn, key='_BTNS_'),
-                        sg.Column(self._col2, key='_RIGHT_')],
+                                   element_justification='c'),
+                        sg.Column(col_btn, key='_BTNS_',
+                                  element_justification='c'),
+                        sg.Column(self._col2, key='_RIGHT_',
+                                  element_justification='c')],
                         [sg.Text("Cramer's formular uses "
                                  "first column of the other matrix.")],
                         [sg.Exit(size=(10,1),
@@ -300,48 +354,5 @@ class CramerEventProcesser(SingleMatrixEventProcesser):
             print("Cannot be solved.")
 
 
-col1 = [[sg.Spin(list(range(1, 11)), initial_value=3,
-                 key='_ROW1_', enable_events=True),
-         sg.Text("X"),
-         sg.Spin(list(range(1, 11)), initial_value=3,
-                 key='_COL1_', enable_events=True)],
-        generate_table(1, 3, 3),
-        [sg.Button("Transpose", key='_TRANS_BTN_1_', size=(15, 1)),
-         sg.Button("Determinant", key='_DET_BTN_1_', size=(15, 1))],
-        [sg.Button("Inverse", key='_INV_BTN_1_', size=(15, 1)),
-         sg.Button("Cramer's formular", key='_CRAMER_BTN_1_', size=(15, 1))]]
-col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_', size=(15,4))],
-           [sg.Button("Gauss elimination", key='_GAUSS_BTN_', size=(15,4))]]
-col2 = [[sg.Spin(list(range(1, 11)), initial_value=3,
-                 key='_ROW2_', enable_events=True),
-         sg.Text("X"),
-         sg.Spin(list(range(1, 11)), initial_value=3,
-                 key='_COL2_', enable_events=True)],
-        generate_table(2, 3, 3),
-        [sg.Button("Transpose", key='_TRANS_BTN_2_', size=(15,1)),
-         sg.Button("Determinant", key='_DET_BTN_2_', size=(15,1))],
-        [sg.Button("Inverse", key='_INV_BTN_2_', size=(15,1)),
-         sg.Button("Cramer's formular", key='_CRAMER_BTN_2_', size=(15,1))]]
-
-layout = [[sg.Column(col1, key='_LEFT_', element_justification='center'),
-           sg.Column(col_btn, key='_BTNS_', element_justification='c'),
-           sg.Column(col2, key='_RIGHT_')],
-          [sg.Text("Cramer's formular uses first column of the other matrix.")],
-          [sg.Exit(size=(10,1), button_color=("black", "#f77263"))]]
-
-window = sg.Window('Matrix with step by step solution', layout)
-
-handler = ProgramEventHandler(window)
-
-while True:
-    event, values = window.read(timeout=100)
-    handler.update_event_values(event, values)
-    if event is None or event == 'Exit':
-        break
-    try:
-        window = handler.handle_event()
-    except Exception as e:
-        print(type(e))
-        print(str(e))
-
-window.close()
+if __name__ == '__main__':
+    main()
