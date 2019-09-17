@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 from matrix import Matrix
 from abc import *
 
+
 def main():
     col1 = make_column(1)
     col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_', size=(15, 4))],
@@ -12,8 +13,9 @@ def main():
     layout = [[sg.Column(col1, key='_LEFT_', element_justification='c'),
                sg.Column(col_btn, key='_BTNS_', element_justification='c'),
                sg.Column(col2, key='_RIGHT_', element_justification='c')],
-              [sg.Text("Cramer's formular uses first column of the other matrix.")],
-              [sg.Exit(size=(10,1), button_color=("black", "#f77263"))]]
+              [sg.Text("Cramer's formular uses "
+                       "first column of the other matrix.")],
+              [sg.Exit(size=(10, 1), button_color=("black", "#f77263"))]]
 
     window = sg.Window('Matrix with step by step solution', layout)
 
@@ -32,33 +34,37 @@ def main():
 
     window.close()
 
+
 def make_column(col_num):
     return [
             [sg.Spin(list(range(1, 11)), initial_value=3,
-                     key='_ROW'+ str(col_num) + '_', enable_events=True),
+                     key='_ROW' + str(col_num) + '_', enable_events=True),
              sg.Text("X"),
              sg.Spin(list(range(1, 11)), initial_value=3,
-                     key='_COL'+ str(col_num) + '_', enable_events=True)],
-            
+                     key='_COL' + str(col_num) + '_', enable_events=True)],
+
             generate_table(col_num, 3, 3),
-            
-            [sg.Button("Transpose", key='_TRANS_BTN_'+ str(col_num) + '_',
+
+            [sg.Button("Transpose", key='_TRANS_BTN_' + str(col_num) + '_',
                        size=(15, 1)),
-             sg.Button("Determinant", key='_DET_BTN_'+ str(col_num) + '_',
+             sg.Button("Determinant", key='_DET_BTN_' + str(col_num) + '_',
                        size=(15, 1))],
-            
-            [sg.Button("Inverse", key='_INV_BTN_'+ str(col_num) + '_',
+
+            [sg.Button("Inverse", key='_INV_BTN_' + str(col_num) + '_',
                        size=(15, 1)),
              sg.Button("Cramer's formular",
-                       key='_CRAMER_BTN_'+ str(col_num) + '_',
+                       key='_CRAMER_BTN_' + str(col_num) + '_',
                        size=(15, 1))]
            ]
 
+
 def generate_table(num, row, col):
-    return [sg.Column([[sg.Input(0, do_not_clear=True, size=(3,2),
+    return [sg.Column([[sg.Input(0, do_not_clear=True, size=(3, 2),
                                  key=(num, i, j), justification='right')]
                        for i in range(1, row+1)], pad=(0, 3),
-                      element_justification='c') for j in range(1, col+1)]
+                      element_justification='c')
+            for j in range(1, col+1)]
+
 
 class EventHandler(metaclass=ABCMeta):
     def __init__(self, event=None, values=None):
@@ -73,6 +79,7 @@ class EventHandler(metaclass=ABCMeta):
     def handle_event(self):
         pass
 
+
 class ProgramEventHandler(EventHandler):
     def __init__(self, window, event=None, values=None):
         super().__init__(event, values)
@@ -85,16 +92,15 @@ class ProgramEventHandler(EventHandler):
 
         if self._event == "__TIMEOUT__":
             return self.window_event_handler.window
-        else:
-            if self.is_window_event():
-                handler = self.window_event_handler
-            else:
-                handler = self.matrix_event_handler
 
-            self.handle_sub_event(handler)
+        if self.is_window_event():
+            handler = self.window_event_handler
+        else:
+            handler = self.matrix_event_handler
+
+        self.handle_sub_event(handler)
 
         return self.window_event_handler.window
-
 
     def is_window_event(self):
         return 'ROW' in self._event or 'COL' in self._event
@@ -102,7 +108,6 @@ class ProgramEventHandler(EventHandler):
     def handle_sub_event(self, handler):
         handler.update_event_values(self._event, self._values)
         handler.handle_event()
-
 
 
 class PopUpHandler:
@@ -126,9 +131,9 @@ class PopUpHandler:
         if not self.output_popup_activated:
             self._make_popup_window()
             self.output_popup_activated = True
-        
+
     def _make_popup_window(self):
-        output_layout = [[sg.Output(size=(80,20), font='Consolas 10')],
+        output_layout = [[sg.Output(size=(80, 20), font='Consolas 10')],
                          [sg.Quit()]]
         self.output_window = sg.Window('Output', output_layout, finalize=True)
 
@@ -138,12 +143,12 @@ class PopUpHandler:
             self.output_popup_activated = False
             self.output_window.Close()
 
-            
+
 class WindowEventHandler(EventHandler):
     def __init__(self, window):
         super().__init__()
         self.window = window
-    
+
     def handle_event(self):
         OFFSET = -2
 
@@ -156,40 +161,13 @@ class WindowEventHandler(EventHandler):
 
 class MatrixEventHandler(EventHandler):
     def __init__(self):
+        super().__init__()
         self._mat1 = Matrix()
         self._mat2 = Matrix()
-        self._event = None
-        self._values = None
 
     def handle_event(self):
-        OFFSET = -2
-
         self.get_matrixes_from_values()
-        if self._event == '_MUL_BTN_':
-            processer = MatmulEventProcesser(mat1=self._mat1,
-                                             mat2=self._mat2)
-
-        elif self._event == '_GAUSS_BTN_':
-            processer = GaussEventProcesser(mat1=self._mat1,
-                                            mat2=self._mat2)
-        else:
-            process_num = int(self._event[OFFSET])
-
-        if 'TRANS' in self._event:
-            matrix, _ = self.get_matrix_target_to_process(process_num)
-            processer = TransposeEventProcesser(matrix=matrix)
-
-        if 'INV' in self._event:
-            matrix, _ = self.get_matrix_target_to_process(process_num)
-            processer = InverseEventProcesser(matrix=matrix)
-
-        if 'DET' in self._event:
-            matrix, _ = self.get_matrix_target_to_process(process_num)
-            processer = DeterminantEventProcesser(matrix=matrix)
-        if 'CRAMER' in self._event:
-            matrix, target = self.get_matrix_target_to_process(process_num)
-            processer = CramerEventProcesser(matrix=matrix, target=target)
-
+        processer = self.choose_processer()
         processer.process()
 
     def get_matrixes_from_values(self):
@@ -201,9 +179,33 @@ class MatrixEventHandler(EventHandler):
         self._mat2 = self.get_matrix(2, row_val_2, col_val_2)
 
     def get_matrix(self, num, max_row, max_col):
-        return Matrix([[int(self._values[(num, j, i)])\
+        return Matrix([[int(self._values[(num, j, i)])
                         for i in range(1, max_col + 1)]
                        for j in range(1, max_row + 1)])
+
+    def choose_processer(self):
+        OFFSET = -2
+        if self._event == '_MUL_BTN_':
+            processer = MatmulEventProcesser(mat1=self._mat1,
+                                             mat2=self._mat2)
+
+        elif self._event == '_GAUSS_BTN_':
+            processer = GaussEventProcesser(mat1=self._mat1,
+                                            mat2=self._mat2)
+        else:
+            process_num = int(self._event[OFFSET])
+            matrix, target = self.get_matrix_target_to_process(process_num)
+
+            if 'TRANS' in self._event:
+                processer = TransposeEventProcesser(matrix=matrix)
+            if 'INV' in self._event:
+                processer = InverseEventProcesser(matrix=matrix)
+            if 'DET' in self._event:
+                processer = DeterminantEventProcesser(matrix=matrix)
+            if 'CRAMER' in self._event:
+                processer = CramerEventProcesser(matrix=matrix, target=target)
+
+        return processer
 
     def get_matrix_target_to_process(self, process_num):
         if process_num == 1:
@@ -212,20 +214,13 @@ class MatrixEventHandler(EventHandler):
         else:
             matrix = self._mat2
             target = tuple(self._mat1.T[0])
-        return matrix, target 
+        return matrix, target
 
 
 class EventProcesser(metaclass=ABCMeta):
-    def __init__(self):
-        pass
-
     @abstractmethod
     def process(self):
         pass
-
-class SingleMatrixEventProcesser(EventProcesser):
-    def __init__(self, matrix):
-        self._matrix = matrix
 
 
 class TableChangeEventProcesser(EventProcesser):
@@ -264,7 +259,7 @@ class TableChangeEventProcesser(EventProcesser):
                                   element_justification='c')],
                         [sg.Text("Cramer's formular uses "
                                  "first column of the other matrix.")],
-                        [sg.Exit(size=(10,1),
+                        [sg.Exit(size=(10, 1),
                                  button_color=("black", "#f77263"))]]
 
     def _update_window(self):
@@ -276,10 +271,15 @@ class TableChangeEventProcesser(EventProcesser):
         self._window = window1
 
 
-class MatmulEventProcesser(EventProcesser):
+class DoubleMatrixEventProcesser(EventProcesser):
     def __init__(self, mat1, mat2):
         self._mat1 = mat1
         self._mat2 = mat2
+
+
+class MatmulEventProcesser(DoubleMatrixEventProcesser):
+    def __init__(self, mat1, mat2):
+        super().__init__(mat1, mat2)
 
     def process(self):
         try:
@@ -291,16 +291,20 @@ class MatmulEventProcesser(EventProcesser):
             print("Unable to multiply.")
 
 
-class GaussEventProcesser(EventProcesser):
+class GaussEventProcesser(DoubleMatrixEventProcesser):
     def __init__(self, mat1, mat2):
-        self._mat1 = mat1
-        self._mat2 = mat2
+        super().__init__(mat1, mat2)
 
     def process(self):
         try:
-             self._mat1.gauss_elim(self._mat2, step_by_step=True)
+            self._mat1.gauss_elim(self._mat2, step_by_step=True)
         except (ValueError, ZeroDivisionError) as e:
             print(str(e))
+
+
+class SingleMatrixEventProcesser(EventProcesser):
+    def __init__(self, matrix):
+        self._matrix = matrix
 
 
 class TransposeEventProcesser(SingleMatrixEventProcesser):
