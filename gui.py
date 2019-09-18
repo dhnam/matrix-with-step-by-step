@@ -4,14 +4,7 @@ from matrix import Matrix
 
 
 def main():
-    sg.change_look_and_feel('Reddit')
-    sg.set_options(border_width=0, font='Roboto 12',
-                   input_elements_background_color='#86a8ff',
-                   input_text_color='#000000',
-                   background_color='#e3f2fd',
-                   text_element_background_color='#e3f2fd',
-                   button_color=('#ffffff', '#5079d3'))
-    sg.set_options(scrollbar_color='#5ea7ff')
+    sg.change_look_and_feel('Material1')
 
     col1 = make_matrix_column(1)
     col_btn = [[sg.Button("Matrix multiply", key='_MUL_BTN_', size=(15, 4))],
@@ -36,7 +29,10 @@ def main():
         if event is None or event == 'Exit':
             break
 
-        handler.handle_event()
+        try:
+            handler.handle_event()
+        except ValueError as err:
+            print(str(err))
         window = handler.get_window()
 
     window.close()
@@ -267,7 +263,7 @@ class TableChangeEventProcesser(EventProcesser):
                         [sg.Text("Cramer's formular uses "
                                  "first column of the other matrix.")],
                         [sg.Exit(size=(10, 1),
-                                 button_color=("black", "#f77263"))]]
+                                 button_color=("black", "#ff0266"))]]
 
     def _update_window(self):
         cur = self._window.current_location()
