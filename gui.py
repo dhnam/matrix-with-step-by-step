@@ -60,12 +60,20 @@ def make_matrix_column(col_num):
 
 
 def generate_table(num, row, col):
-    return [sg.Column([[sg.Input(0, do_not_clear=True, size=(5, 2),
-                                 key=(num, i, j), justification='right',
-                                 pad=(0, 5))]
-                       for i in range(1, row+1)], pad=(0, 3),
-                      element_justification='c')
-            for j in range(1, col+1)]
+    return [
+        sg.Column(
+            [[
+                sg.Input(
+                    0,
+                    do_not_clear=True,
+                    size=(5, 2),
+                    key=(num, i, j),
+                    justification='right',
+                    pad=(0, 5))
+            ] for i in range(1, row + 1)],
+            pad=(0, 3),
+            element_justification='c') for j in range(1, col + 1)
+    ]
 
 
 class EventHandler(metaclass=ABCMeta):
