@@ -1,8 +1,5 @@
 """
-    Matrix
-    ------
-
-    Self made matrix mudule with step-by-step solution!
+Matrix : Self made matrix module with step-by-step solution!
 """
 from fractions import Fraction
 from typing import Optional, Tuple, Union
