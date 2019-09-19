@@ -246,27 +246,27 @@ class Matrix(list):
         Example of using gauss_elem with no option:
 
         >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]])
-        >>> print(a.gauss_elem())
+        >>> print(a.gauss_elim())
         [[-40 16  9]
          [ 13 -5 -3]
          [  5 -2 -1]]
 
         Example of using gauss_elem with option:
 
-        >>> b = Matrix([[1,0,0],[0,1,0],[0,1,1]])
-        >>> print(a.gauss_elem(b))
+        >>> b = Matrix([[1,0,0],[0,1,0],[0,0,1]])
+        >>> print(a.gauss_elim(b))
         [[-40 16  9]
          [ 13 -5 -3]
          [  5 -2 -1]]
 
         Example of using step by step solution:
 
-        >>> a.gauss_elem(step_by_step=True)
+        >>> a.gauss_elim(step_by_step=True) #doctest: +ELLIPSIS
         1 2 3 | 1 0 0
         2 5 3 | 0 1 0
         1 0 8 | 0 0 1
         Add row 1 * -2 to row 2
-            ...
+        ...
 
         """
 
@@ -384,7 +384,7 @@ class Matrix(list):
         Parameters
         ----------
         step_by_step
-            if True, print step by step solution
+            If True, print step by step solution
 
         Raises
         ------
@@ -402,7 +402,7 @@ class Matrix(list):
         --------
         Example of using inv_using_det:
 
-        >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]]
+        >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]])
         >>> print(a.inv_using_det())
         [[-40 16  9]
          [ 13 -5 -3]
@@ -410,15 +410,16 @@ class Matrix(list):
 
         Example of using step by step solution:
 
-        >>> a.inv_using_det(step_by_step=True)
+        >>> a.inv_using_det(step_by_step=True) #doctest:+ELLIPSIS
         Get adjugate matrix before transpose
         [[ 40 -13 -5]
          [-16   5  2]
          [ -9   3  1]]
         Transpose it
-            ...
+        ...
 
         """
+
         if len(self) != len(self[0]):
             raise ValueError(
                 'Matrix must be square to get inverse, '
@@ -483,13 +484,14 @@ class Matrix(list):
         --------
         Example of using cramer:
 
-        >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]]
-        >>> print(a.crammer((5, 2, 1)))
+        >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]])
+        >>> res = a.cramer((5, 2, 1))
+        >>> print(tuple(int(x) for x in res))
         (-159, 52, 20)
 
         Example of using cramer with step by step solution:
 
-        >>> a.crammer((5, 2, 1), step_by_step=True)
+        >>> a.cramer((5, 2, 1), step_by_step=True) #doctest:+ELLIPSIS
         Find Determinant of given matrix.
         Determinant of
         [[1 2 3]
@@ -499,6 +501,7 @@ class Matrix(list):
         ...
 
         """
+
         if not len(self) == len(self[0]) == len(vals):
             raise ValueError(
                 'Matrix must be square and have same size as numbers'
@@ -776,3 +779,4 @@ if __name__ == "__main__":
         a.cramer(tuple(b.T[0]), step_by_step=True)
     except (ZeroDivisionError, ValueError) as e:
         print(e)
+
