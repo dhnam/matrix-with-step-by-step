@@ -243,7 +243,7 @@ class Matrix(list):
 
         Examples
         --------
-        Example of using gauss_elem with no option:
+        Example of using gauss_elim with no option:
 
         >>> a = Matrix([[1,2,3],[2,5,3],[1,0,8]])
         >>> print(a.gauss_elim())
@@ -251,7 +251,7 @@ class Matrix(list):
          [ 13 -5 -3]
          [  5 -2 -1]]
 
-        Example of using gauss_elem with option:
+        Example of using gauss_elim with option:
 
         >>> b = Matrix([[1,0,0],[0,1,0],[0,0,1]])
         >>> print(a.gauss_elim(b))
