@@ -38,14 +38,14 @@ def main():
     window.close()
 
 
-def make_matrix_column(col_num):
+def make_matrix_column(col_num, row=3, col=3):
     return [[sg.Spin(list(range(1, 11)), initial_value=3,
                      key='_ROW' + str(col_num) + '_', enable_events=True),
              sg.Text("X"),
              sg.Spin(list(range(1, 11)), initial_value=3,
                      key='_COL' + str(col_num) + '_', enable_events=True)],
 
-            generate_table(col_num, 3, 3),
+            *generate_table(col_num, row, col),
 
             [sg.Button("Transpose", key='_TRANS_BTN_' + str(col_num) + '_',
                        size=(15, 1)),
@@ -60,20 +60,12 @@ def make_matrix_column(col_num):
 
 
 def generate_table(num, row, col):
-    return [
-        sg.Column(
-            [[
-                sg.Input(
-                    0,
-                    do_not_clear=True,
-                    size=(5, 2),
-                    key=(num, i, j),
-                    justification='right',
-                    pad=(0, 5))
-            ] for i in range(1, row + 1)],
-            pad=(0, 3),
-            element_justification='c') for j in range(1, col + 1)
-    ]
+    layout = []
+    for i in range(1, row+1):
+        layout += [[sg.Input(0, do_not_clear=True, size=(5, 2),
+                                 key=(num, i, j), justification='right',
+                                 pad=(3, 5)) for j in range(1,col+1)]]
+    return layout
 
 
 class EventHandler(metaclass=ABCMeta):
@@ -253,9 +245,9 @@ class TableChangeEventProcesser(EventProcesser):
         col_val = int(self._values['_COL' + str(self._process_num) + '_'])
         new_table = generate_table(self._process_num, row_val, col_val)
         if self._process_num == 1:
-            self._col1[TABLE_INDEX] = new_table
+            self._col1 = make_matrix_column(1, row_val, col_val)
         else:
-            self._col2[TABLE_INDEX] = new_table
+            self._col2 = make_matrix_column(2, row_val, col_val)
         self._make_new_layout()
         self._update_window()
         return self._window
